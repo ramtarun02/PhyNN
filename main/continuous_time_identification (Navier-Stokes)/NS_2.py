@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, '../../Utilities/')
 
 import tensorflow as tf
-tf.compat.v1.disable_v2_behavior()
+import tensorflow_probability as tfp
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io
@@ -67,14 +67,10 @@ class PhysicsInformedNN:
                     tf.reduce_sum(input_tensor=tf.square(self.f_u_pred)) + \
                     tf.reduce_sum(input_tensor=tf.square(self.f_v_pred))
                     
-        self.optimizer = tf.contrib.opt.ScipyOptimizerInterface(self.loss, 
-                                                                method = 'L-BFGS-B', 
-                                                                options = {'maxiter': 50000,
-                                                                           'maxfun': 50000,
-                                                                           'maxcor': 50,
-                                                                           'maxls': 50,
-                                                                           'ftol' : 1.0 * np.finfo(float).eps})        
-        
+        #self.optimizer = tf.contrib.opt.ScipyOptimizerInterface(self.loss, method = 'L-BFGS-B', options = {'maxiter': 50000, 'maxfun': 50000, 'maxcor': 50, 'maxls':50, 'ftol': 1.0 * np.finfo(float).eps})
+                                                                 
+        #tfp.optimizer.lbfgs_minimize(self.loss, tolerance = 1.0 * np.finfo(float).eps)
+
         self.optimizer_Adam = tf.compat.v1.train.AdamOptimizer()
         self.train_op_Adam = self.optimizer_Adam.minimize(self.loss)                    
         
@@ -422,7 +418,7 @@ if __name__ == "__main__":
     ax.set_zlim3d(r3)
     axisEqual3D(ax)
     
-    # savefig('./figures/NavierStokes_data') 
+    savefig('./figures/NavierStokes_data') 
 
     
     fig, ax = plt.subplot(1.015, 0.8)
@@ -489,5 +485,5 @@ if __name__ == "__main__":
  
     ax.text(0.015,0.0,s)
     
-    # savefig('./figures/NavierStokes_prediction') 
+    savefig('./figures/NavierStokes_prediction.jpg') 
 
