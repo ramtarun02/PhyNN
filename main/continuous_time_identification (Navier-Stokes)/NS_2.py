@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, '../../Utilities/')
 
 import tensorflow as tf
-tf.disable_v2_behavior()
+tf.compat.v1.disable_v2_behavior()
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io
@@ -50,22 +50,22 @@ class PhysicsInformedNN:
         self.lambda_2 = tf.Variable([0.0], dtype=tf.float32)
         
         # tf placeholders and graph
-        self.sess = tf.compat.v1.Session(config=tf.ConfigProto(allow_soft_placement=True,
+        self.sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(allow_soft_placement=True,
                                                      log_device_placement=True))
         
-        self.x_tf = tf.placeholder(tf.float32, shape=[None, self.x.shape[1]])
-        self.y_tf = tf.placeholder(tf.float32, shape=[None, self.y.shape[1]])
-        self.t_tf = tf.placeholder(tf.float32, shape=[None, self.t.shape[1]])
+        self.x_tf = tf.compat.v1.placeholder(tf.float32, shape=[None, self.x.shape[1]])
+        self.y_tf = tf.compat.v1.placeholder(tf.float32, shape=[None, self.y.shape[1]])
+        self.t_tf = tf.compat.v1.placeholder(tf.float32, shape=[None, self.t.shape[1]])
         
-        self.u_tf = tf.placeholder(tf.float32, shape=[None, self.u.shape[1]])
-        self.v_tf = tf.placeholder(tf.float32, shape=[None, self.v.shape[1]])
+        self.u_tf = tf.compat.v1.placeholder(tf.float32, shape=[None, self.u.shape[1]])
+        self.v_tf = tf.compat.v1.placeholder(tf.float32, shape=[None, self.v.shape[1]])
         
         self.u_pred, self.v_pred, self.p_pred, self.f_u_pred, self.f_v_pred = self.net_NS(self.x_tf, self.y_tf, self.t_tf)
         
-        self.loss = tf.reduce_sum(tf.square(self.u_tf - self.u_pred)) + \
-                    tf.reduce_sum(tf.square(self.v_tf - self.v_pred)) + \
-                    tf.reduce_sum(tf.square(self.f_u_pred)) + \
-                    tf.reduce_sum(tf.square(self.f_v_pred))
+        self.loss = tf.reduce_sum(input_tensor=tf.square(self.u_tf - self.u_pred)) + \
+                    tf.reduce_sum(input_tensor=tf.square(self.v_tf - self.v_pred)) + \
+                    tf.reduce_sum(input_tensor=tf.square(self.f_u_pred)) + \
+                    tf.reduce_sum(input_tensor=tf.square(self.f_v_pred))
                     
         self.optimizer = tf.contrib.opt.ScipyOptimizerInterface(self.loss, 
                                                                 method = 'L-BFGS-B', 
@@ -75,10 +75,10 @@ class PhysicsInformedNN:
                                                                            'maxls': 50,
                                                                            'ftol' : 1.0 * np.finfo(float).eps})        
         
-        self.optimizer_Adam = tf.train.AdamOptimizer()
+        self.optimizer_Adam = tf.compat.v1.train.AdamOptimizer()
         self.train_op_Adam = self.optimizer_Adam.minimize(self.loss)                    
         
-        init = tf.global_variables_initializer()
+        init = tf.compat.v1.global_variables_initializer()
         self.sess.run(init)
 
     def initialize_NN(self, layers):        
@@ -119,23 +119,23 @@ class PhysicsInformedNN:
         psi = psi_and_p[:,0:1]
         p = psi_and_p[:,1:2]
         
-        u = tf.gradients(psi, y)[0]
-        v = -tf.gradients(psi, x)[0]  
+        u = tf.gradients(ys=psi, xs=y)[0]
+        v = -tf.gradients(ys=psi, xs=x)[0]  
         
-        u_t = tf.gradients(u, t)[0]
-        u_x = tf.gradients(u, x)[0]
-        u_y = tf.gradients(u, y)[0]
-        u_xx = tf.gradients(u_x, x)[0]
-        u_yy = tf.gradients(u_y, y)[0]
+        u_t = tf.gradients(ys=u, xs=t)[0]
+        u_x = tf.gradients(ys=u, xs=x)[0]
+        u_y = tf.gradients(ys=u, xs=y)[0]
+        u_xx = tf.gradients(ys=u_x, xs=x)[0]
+        u_yy = tf.gradients(ys=u_y, xs=y)[0]
         
-        v_t = tf.gradients(v, t)[0]
-        v_x = tf.gradients(v, x)[0]
-        v_y = tf.gradients(v, y)[0]
-        v_xx = tf.gradients(v_x, x)[0]
-        v_yy = tf.gradients(v_y, y)[0]
+        v_t = tf.gradients(ys=v, xs=t)[0]
+        v_x = tf.gradients(ys=v, xs=x)[0]
+        v_y = tf.gradients(ys=v, xs=y)[0]
+        v_xx = tf.gradients(ys=v_x, xs=x)[0]
+        v_yy = tf.gradients(ys=v_y, xs=y)[0]
         
-        p_x = tf.gradients(p, x)[0]
-        p_y = tf.gradients(p, y)[0]
+        p_x = tf.gradients(ys=p, xs=x)[0]
+        p_y = tf.gradients(ys=p, xs=y)[0]
 
         f_u = u_t + lambda_1*(u*u_x + v*u_y) + p_x - lambda_2*(u_xx + u_yy) 
         f_v = v_t + lambda_1*(u*v_x + v*v_y) + p_y - lambda_2*(v_xx + v_yy)
